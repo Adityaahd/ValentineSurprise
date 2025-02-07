@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Special Valentine 💖</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Dancing+Script:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    /* ================================================
+       Base & Reset Styles
+    =================================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      font-family: 'Pacifico', cursive;
+      background: radial-gradient(circle at center, #ffe6f0, #ffb3c6);
+      position: relative;
+      color: #333;
+    }
+    
+    /* ================================================
+       Canvas Background (Particle System)
+    =================================================== */
+    #bgCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -2;
+    }
+    
+    /* ================================================
+       Audio Toggle Button
+    =================================================== */
+    #audioToggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255, 255, 255, 0.8);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      z-index: 10;
+      font-size: 1.2rem;
+    }
+    
+    /* ================================================
+       Header & Main Content
+    =================================================== */
+    header {
+      margin-top: 2rem;
+      text-align: center;
+      animation: fadeInDown 1.5s ease-out;
+      cursor: pointer; /* Clicking header opens the story map */
+    }
+    header h1 {
+      color: #ff4d6d;
+      font-size: 2.8rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    main.container {
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+    }
+    .question-box {
+      background: rgba(255, 255, 255, 0.92);
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      margin: 2rem auto;
+      width: 90%;
+      max-width: 500px;
+      animation: float 3s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+    }
+    .question-text {
+      font-family: 'Dancing Script', cursive;
+      font-size: 3rem;
+      color: #ff4d6d;
+      margin: 1rem 0;
+    }
+    
+    /* ================================================
+       Button Styles & Ripple Effect
+    =================================================== */
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+      position: relative;
+    }
+    .valentine-btn {
+      position: relative;
+      overflow: hidden;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Pacifico', cursive;
+    }
+    .yes-btn {
+      background: #ff4d6d;
+      color: white;
+    }
+    .no-btn {
+      background: #ffb3c6;
+      color: white;
+    }
+    .valentine-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    /* Ripple effect element */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: rippleEffect 600ms linear;
+      background-color: rgba(255, 255, 255, 0.7);
+      pointer-events: none;
+    }
+    @keyframes rippleEffect {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    
+    /* ================================================
+       Sequential Messages & Easter Egg
+    =================================================== */
+    .message-timeline, .easter-egg {
+      max-width: 500px;
+      margin: 2rem auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 1.5rem;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .message-timeline.show, .easter-egg.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .message-timeline p {
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.8rem;
+      color: #ff4d6d;
+      margin: 1rem 0;
+    }
+    
+    /* ================================================
+       Floating Heart (for cascade animations)
+    =================================================== */
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #ff4d6d;
+      transform: rotate(45deg);
+      animation: fly 3s linear forwards;
+      opacity: 0.9;
+    }
+    .heart::before,
+    .heart::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #ff4d6d;
+      border-radius: 50%;
+    }
+    .heart::before {
+      top: -10px;
+      left: 0;
+    }
+    .heart::after {
+      left: -10px;
+      top: 0;
+    }
+    @keyframes fly {
+      0% {
+        opacity: 1;
+        transform: rotate(45deg) translate(0, 0);
+      }
+      100% {
+        opacity: 0;
+        transform: rotate(45deg) translate(var(--tx), var(--ty));
+      }
+    }
+    
+    /* ================================================
+       New: "Let's Start Our Story" Button
+    =================================================== */
+    .start-story {
+      margin-top: 2rem;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .start-story.show {
+      opacity: 1;
+    }
+    .start-story-btn {
+      background: #6a1b9a;
+      color: #fff;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      font-family: 'Pacifico', cursive;
+    }
+    .start-story-btn:hover {
+      transform: scale(1.05);
+    }
+    
+    /* ================================================
+       Modal Styles for "Let's Start Our Story" with Map
+    =================================================== */
+    .story-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      animation: fadeInModal 0.5s ease forwards;
+    }
+    .story-modal-content {
+      background: #fff;
+      border-radius: 15px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+      animation: zoomIn 0.5s ease forwards;
+      position: relative;
+    }
+    .story-modal-content h2 {
+      font-family: 'Dancing Script', cursive;
+      font-size: 2.5rem;
+      color: #ff4d6d;
+      margin-bottom: 1rem;
+    }
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 2rem;
+      cursor: pointer;
+      color: #ff4d6d;
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes zoomIn {
+      from { transform: scale(0.7); }
+      to { transform: scale(1); }
+    }
+    
+    /* ================================================
+       New: Story Map (Candy Crush–Style) in Modal
+    =================================================== */
+    .story-map {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      margin: 1rem 0;
+    }
+    #storySVG {
+      width: 100%;
+      height: 100%;
+    }
+    /* Animate the drawn path */
+    #storyPath {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: drawPath 3s forwards;
+    }
+    @keyframes drawPath {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    /* Story nodes with a mild hover effect (so they remain easily clickable) */
+    .story-node {
+      fill: #ff4d6d;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .story-node:hover {
+      transform: scale(1.05);
+    }
+    .chapter-content {
+      margin-top: 1rem;
+      font-family: 'Pacifico', cursive;
+      font-size: 1.5rem;
+      color: #333;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .chapter-content.show {
+      opacity: 1;
+    }
+    /* Moving heart indicator that travels along the map */
+    .moving-heart {
+      position: absolute;
+      font-size: 2rem;
+      pointer-events: none;
+      transition: left 1s ease, top 1s ease;
+    }
+    
+    /* ================================================
+       Special Overlay for Double-Click Easter Egg on Canvas
+    =================================================== */
+    .special-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 30;
+      text-align: center;
+    }
+    .special-overlay p {
+      font-family: 'Dancing Script', cursive;
+      font-size: 2rem;
+      color: #ff4d6d;
+    }
+    
+    /* ================================================
+       Animations
+    =================================================== */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    /* ================================================
+       Responsive Design
+    =================================================== */
+    @media (max-width: 768px) {
+      .question-text {
+        font-size: 2rem;
+      }
+      .valentine-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Canvas for dynamic particle background -->
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- Audio Toggle Button -->
+  <button id="audioToggle" onclick="toggleAudio()">🔊</button>
+
+  <!-- Header (click to open "Our Story" modal as an extra surprise) -->
+  <header onclick="toggleStoryModal()">
+    <h1>For My Special One 💕</h1>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <div class="question-box">
+      <div class="question-text">Honeyy, will you be my Valentine?</div>
+      <div class="buttons">
+        <button class="valentine-btn yes-btn" onclick="handleYes(event)">Yes! 💖</button>
+        <button class="valentine-btn no-btn" onmouseover="moveNoButton(event)" onclick="handleNo(event)">No 😢</button>
+      </div>
+    </div>
+
+    <!-- Sequential Messages (Revealed after clicking "Yes") -->
+    <div class="message-timeline" id="messageTimeline"></div>
+
+    <!-- "Let's Start Our Story" Button (Revealed after messages) -->
+    <div id="startStory" class="start-story">
+      <button class="start-story-btn" onclick="toggleStoryModal()">Let's Start Our Love Story</button>
+    </div>
+
+    <!-- Hidden Easter Egg (Revealed on secret key sequence "love") -->
+    <div class="easter-egg" id="easterEgg">
+      <p>Honeyy, you discovered the secret of our love! ❤️</p>
+    </div>
+  </main>
+
+  <!-- Story Modal with Interactive Map -->
+  <div id="storyModal" class="story-modal">
+    <div class="story-modal-content">
+      <span class="close" onclick="closeStoryModal()">&times;</span>
+      <h2>Love Story</h2>
+      <div id="storyMap" class="story-map">
+        <svg id="storySVG" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+          <!-- A curvy path drawn in pink -->
+          <path id="storyPath" d="M50 250 C150 50, 250 50, 350 250 S500 150, 550 250" fill="none" stroke="#ff4d6d" stroke-width="4" />
+          <!-- Four clickable nodes for each chapter -->
+          <circle class="story-node" cx="50" cy="250" r="15" data-chapter="1" />
+          <circle class="story-node" cx="200" cy="100" r="15" data-chapter="2" />
+          <circle class="story-node" cx="350" cy="250" r="15" data-chapter="3" />
+          <circle class="story-node" cx="550" cy="250" r="15" data-chapter="4" />
+        </svg>
+        <!-- Moving heart indicator that will travel to the chosen node -->
+        <div id="movingHeart" class="moving-heart">❤️</div>
+      </div>
+      <!-- Chapter content area (revealed when a node is clicked) -->
+      <div id="chapterContent" class="chapter-content"></div>
+    </div>
+  </div>
+
+  <!-- Special Overlay for Double-Click Easter Egg on Canvas -->
+  <div id="specialOverlay" class="special-overlay">
+    <p>Honeyy, you are my sunshine! ☀️</p>
+  </div>
+
+  <!-- Audio Elements -->
+  <!-- Make sure these audio files are in the same folder or use full URLs -->
+  <audio id="celebrationSound" src="audio/Die-With-A-Smile.mp3"></audio>
+  <audio id="bgMusic" src="audio/Until-I-Found-You.mp3" loop></audio>
+
+  <script>
+    /* ================================================
+       Variables & Initialization
+    =================================================== */
+    const bgCanvas = document.getElementById('bgCanvas');
+    const ctx = bgCanvas.getContext('2d');
+    let particles = [];
+    let mouseX = 0;
+    let mouseY = 0;
+    const particleCount = 80; // number of particles
+    let audioEnabled = true;
+    const secretSequence = "love"; // secret key sequence (lowercase)
+    let keyBuffer = "";
+
+    // Set canvas size
+    function resizeCanvas() {
+      bgCanvas.width = window.innerWidth;
+      bgCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    /* ================================================
+       Particle Class for Canvas Animation
+    =================================================== */
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * bgCanvas.width;
+        this.y = Math.random() * bgCanvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = (Math.random() - 0.5) * 1.5;
+        this.speedY = (Math.random() * 1.5) + 0.5;
+        this.alpha = Math.random() * 0.5 + 0.5;
+      }
+      update() {
+        // Parallax effect based on mouse position
+        let parallaxX = (mouseX - bgCanvas.width / 2) * 0.0005;
+        let parallaxY = (mouseY - bgCanvas.height / 2) * 0.0005;
+        this.x += this.speedX + parallaxX;
+        this.y += this.speedY + parallaxY;
+        // Reset if out of bounds
+        if (this.x > bgCanvas.width || this.x < 0 || this.y > bgCanvas.height) {
+          this.reset();
+          this.y = 0;
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255,77,109,${this.alpha})`;
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    // Create particles
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+    }
+    initParticles();
+
+    // Animation loop for particles
+    function animateParticles() {
+      ctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // Update mouse position for parallax
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    /* ================================================
+       Button Ripple Effect (Micro-interaction)
+    =================================================== */
+    document.querySelectorAll('.valentine-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        const rect = this.getBoundingClientRect();
+        ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
+        ripple.style.left = e.clientX - rect.left - rect.width / 2 + 'px';
+        ripple.style.top = e.clientY - rect.top - rect.width / 2 + 'px';
+        this.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+      });
+    });
+
+    /* ================================================
+       "Yes" Button Handler – Cascade Animations & Sequential Reveals
+    =================================================== */
+    function handleYes(e) {
+      if (audioEnabled) {
+        // Stop the background music and reset it
+        const bgMusic = document.getElementById('bgMusic');
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+        // Play the celebration sound
+        document.getElementById('celebrationSound').play();
+      }
+      createCascade();
+      revealMessages();
+    }
+
+    // Cascade of hearts and confetti
+    function createCascade() {
+      const cascadeCount = 40;
+      for (let i = 0; i < cascadeCount; i++) {
+        setTimeout(() => {
+          createHeartParticle();
+          createConfettiParticle();
+        }, i * 50);
+      }
+    }
+    // Create a floating heart element
+    function createHeartParticle() {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.setProperty('--tx', Math.random() * 100 - 50 + 'vw');
+      heart.style.setProperty('--ty', Math.random() * -100 - 100 + 'vh');
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 3000);
+    }
+    // Create a confetti particle element
+    function createConfettiParticle() {
+      const confetti = document.createElement('div');
+      confetti.style.position = 'absolute';
+      confetti.style.width = '10px';
+      confetti.style.height = '10px';
+      confetti.style.backgroundColor = randomColor();
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.top = '100vh';
+      confetti.style.opacity = 0.9;
+      confetti.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      confetti.style.transition = 'all 3s ease-out';
+      document.body.appendChild(confetti);
+      setTimeout(() => {
+        confetti.style.top = Math.random() * 50 + 'vh';
+        confetti.style.opacity = 0;
+      }, 50);
+      setTimeout(() => confetti.remove(), 3050);
+    }
+    // Utility: Random pastel color generator
+    function randomColor() {
+      const colors = ['#ff9a9e', '#fad0c4', '#fbc2eb', '#a18cd1', '#ffdde1'];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    /* ================================================
+       "No" Button – Playful Dodging & Fun Message on Click
+    =================================================== */
+    function moveNoButton(e) {
+      const noBtn = e.target;
+      // Use smaller random offsets so the button dodges subtly yet remains clickable
+      const randomX = Math.random() * 50 - 25;
+      const randomY = Math.random() * 50 - 25;
+      noBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+    }
+    // If by chance the "No" button is clicked, display a playful message
+    function handleNo(e) {
+      e.preventDefault();
+      // Create a temporary fun message overlay near the button
+      const funMsg = document.createElement('div');
+      funMsg.style.position = 'absolute';
+      funMsg.style.background = 'rgba(255, 77, 109, 0.9)';
+      funMsg.style.color = '#fff';
+      funMsg.style.padding = '0.5rem 1rem';
+      funMsg.style.borderRadius = '10px';
+      funMsg.style.fontFamily = 'Pacifico, cursive';
+      funMsg.style.fontSize = '1.2rem';
+      funMsg.textContent = "I knew you love me, Honeyy!";
+      // Position the message relative to the button
+      const rect = e.target.getBoundingClientRect();
+      funMsg.style.left = rect.left + 'px';
+      funMsg.style.top = (rect.top - 40) + 'px';
+      document.body.appendChild(funMsg);
+      // Also trigger a cascade of hearts/confetti
+      createCascade();
+      // Remove the fun message after 2 seconds
+      setTimeout(() => {
+        funMsg.remove();
+      }, 2000);
+    }
+
+    /* ================================================
+       Sequential Reveal of Romantic Messages
+    =================================================== */
+    const messages = [
+      "Honeyy, every moment with you is pure magic.",
+      "You light up my world like no one else, Honeyy.",
+      "I, Aditya, can’t wait to share this journey of love with you.",
+      "Together, let's create our own beautiful story."
+    ];
+    function revealMessages() {
+      const timeline = document.getElementById('messageTimeline');
+      timeline.innerHTML = "";
+      timeline.classList.remove('show');
+      messages.forEach((msg, index) => {
+        const p = document.createElement('p');
+        p.textContent = msg;
+        setTimeout(() => {
+          p.classList.add('show');
+          timeline.appendChild(p);
+          timeline.classList.add('show');
+          // After all messages are shown, reveal the "Start Story" button
+          if (index === messages.length - 1) {
+            setTimeout(() => {
+              document.getElementById('startStory').classList.add('show');
+            }, 1000);
+          }
+        }, index * 1500);
+      });
+    }
+
+    /* ================================================
+       Easter Egg – Reveal on Secret Key Sequence ("love")
+    =================================================== */
+    window.addEventListener('keydown', (e) => {
+      keyBuffer += e.key.toLowerCase();
+      if (keyBuffer.length > secretSequence.length) {
+        keyBuffer = keyBuffer.slice(-secretSequence.length);
+      }
+      if (keyBuffer === secretSequence) {
+        const egg = document.getElementById('easterEgg');
+        egg.classList.add('show');
+        keyBuffer = "";
+        setTimeout(() => {
+          egg.classList.remove('show');
+        }, 5000);
+      }
+    });
+
+    /* ================================================
+       Story Map Interaction in Modal
+    =================================================== */
+    // Define chapter texts for each node with personalized content
+    const chapters = {
+      "1": "Chapter 1: The spark that lit our hearts. From the moment Aditya met Honeyy, magic happened.",
+      "2": "Chapter 2: Moments that made us smile. Every laugh and secret brought us closer.",
+      "3": "Chapter 3: Dreams we share and adventures ahead. Together, Aditya and Honeyy envision a future full of wonder.",
+      "4": "Chapter 4: Forever and always, together. Our love is the adventure of a lifetime."
+    };
+
+    // When the story modal is opened, initialize the moving heart at the first node
+    function initializeMovingHeart() {
+      const firstNode = document.querySelector('.story-node[data-chapter="1"]');
+      moveHeartToNode(firstNode);
+    }
+    
+    // Function to move the moving heart element to the position of a given node
+    function moveHeartToNode(node) {
+      const movingHeart = document.getElementById('movingHeart');
+      const svg = document.getElementById('storySVG');
+      const svgRect = svg.getBoundingClientRect();
+      const nodeRect = node.getBoundingClientRect();
+      // Calculate center of node relative to the viewport
+      const centerX = nodeRect.left + nodeRect.width / 2;
+      const centerY = nodeRect.top + nodeRect.height / 2;
+      // Position the moving heart (offset slightly for visual balance)
+      movingHeart.style.left = (centerX - 10) + "px";
+      movingHeart.style.top = (centerY - 10) + "px";
+    }
+
+    // Add click event listeners to each story node in the SVG map
+    document.querySelectorAll('.story-node').forEach(node => {
+      node.addEventListener('click', () => {
+        const chapter = node.getAttribute('data-chapter');
+        moveHeartToNode(node);  // Animate the heart traveling to the node
+        revealChapter(chapter); // Show the chapter content
+      });
+    });
+
+    // Function to reveal chapter content with a fade-in and extra cascade effect
+    function revealChapter(chapter) {
+      const chapterDiv = document.getElementById('chapterContent');
+      chapterDiv.innerHTML = chapters[chapter];
+      chapterDiv.classList.add('show');
+      // Optionally, trigger an extra cascade effect for added magic
+      createCascade();
+    }
+
+    // Modal toggle functions for the story map
+    function toggleStoryModal() {
+      const modal = document.getElementById('storyModal');
+      if (modal.style.display === "flex") {
+        closeStoryModal();
+      } else {
+        modal.style.display = "flex";
+        initializeMovingHeart();
+      }
+    }
+    function closeStoryModal() {
+      document.getElementById('storyModal').style.display = "none";
+      document.getElementById('chapterContent').classList.remove('show');
+    }
+
+    /* ================================================
+       Special Overlay for Double-Click Easter Egg on Canvas
+    =================================================== */
+    bgCanvas.addEventListener('dblclick', () => {
+      const overlay = document.getElementById('specialOverlay');
+      overlay.style.display = 'block';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 3000);
+    });
+
+    /* ================================================
+       Audio Toggle Functionality
+    =================================================== */
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const bgMusic = document.getElementById('bgMusic');
+      const audioBtn = document.getElementById('audioToggle');
+      if (audioEnabled) {
+        bgMusic.muted = false;
+        audioBtn.textContent = "🔊";
+      } else {
+        bgMusic.muted = true;
+        audioBtn.textContent = "🔇";
+      }
+    }
+
+    /* ================================================
+       Start bgMusic on Page Load
+       Note: Some browsers require a user gesture to autoplay audio.
+             In production, consider prompting the user or using muted autoplay.
+    =================================================== */
+    window.addEventListener('load', () => {
+      if (audioEnabled) {
+        const bgMusic = document.getElementById('bgMusic');
+        // Attempt to play bgMusic on load
+        bgMusic.play().catch((err) => {
+          console.log("Auto-play was prevented:", err);
+        });
+      }
+    });
+  </script>
+  
+  <!-- Additional CSS appended for micro animations -->
+  <style>
+    .message-timeline.show p {
+      animation: fadeInUp 1s ease forwards;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</body>
+</html>
